@@ -3,8 +3,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101510">
   <title>IwakWabsurd Retro</title>
 
   <style>
@@ -17,14 +17,11 @@
       --muted: #a7b3a3;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      padding: 20px;
-      min-height: 100vh;
+      padding: 16px;
       background: var(--bg);
       color: var(--text);
       font-family: system-ui, Arial, sans-serif;
@@ -32,64 +29,61 @@
 
     .page {
       width: min(100%, 1000px);
-      margin: 0 auto;
+      margin: auto;
     }
 
     header {
       text-align: center;
-      margin-bottom: 22px;
+      padding: 12px 0 20px;
     }
 
     h1 {
       margin: 0 0 8px;
       color: var(--green);
-      font-size: clamp(26px, 5vw, 42px);
+      font-size: clamp(28px, 5vw, 42px);
     }
 
-    header p {
-      margin: 0;
+    header p, .hint {
       color: var(--muted);
     }
 
     .panel {
       padding: 18px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
+      background: var(--panel);
       border: 1px solid #354334;
       border-radius: 14px;
-      background: var(--panel);
     }
 
-    .file-label {
+    label {
       display: block;
       margin-bottom: 10px;
-      font-weight: 700;
+      font-weight: bold;
     }
 
     input[type="file"] {
       width: 100%;
       padding: 12px;
-      border: 1px solid #4b5d48;
-      border-radius: 9px;
       background: #111811;
       color: var(--text);
+      border: 1px solid #4b5d48;
+      border-radius: 9px;
     }
 
     .hint {
-      color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
     }
 
     #status {
-      margin-top: 12px;
       color: var(--green);
       overflow-wrap: anywhere;
     }
 
     #game-frame {
-      overflow: hidden;
       width: 100%;
-      min-height: 360px;
+      min-height: 400px;
+      overflow: hidden;
       border: 1px solid #354334;
       border-radius: 14px;
       background: #000;
@@ -97,12 +91,12 @@
 
     #game {
       width: 100%;
-      min-height: 360px;
+      min-height: 400px;
       background: #000;
     }
 
     .controls-info {
-      line-height: 1.8;
+      line-height: 1.9;
     }
 
     .controls-info strong {
@@ -117,18 +111,9 @@
     }
 
     @media (max-width: 600px) {
-      body {
-        padding: 12px;
-      }
-
-      .panel {
-        padding: 13px;
-      }
-
-      #game-frame,
-      #game {
-        min-height: 300px;
-      }
+      body { padding: 10px; }
+      .panel { padding: 13px; }
+      #game-frame, #game { min-height: 320px; }
     }
   </style>
 </head>
@@ -137,45 +122,43 @@
   <main class="page">
     <header>
       <h1>IwakWabsurd Retro</h1>
-      <p>Game Boy emulator • Play your own ROM</p>
+      <p>Play your own Game Boy games</p>
     </header>
 
     <section class="panel">
-      <label class="file-label" for="rom-file">
-        Pilih game Game Boy (.gb / .gbc)
-      </label>
+      <label for="rom-file">Pilih ROM Game Boy (.gb / .gbc)</label>
 
       <input
         id="rom-file"
         type="file"
-        accept=".gb,.gbc,application/octet-stream"
+        accept=".gb,.gbc"
       >
 
       <p class="hint">
-        Pilih file ROM milikmu. Game akan dimuat di bawah.
-        Jangan tutup halaman saat game sedang berjalan.
+        Pilih file ROM yang kamu miliki. Tunggu sampai emulator selesai
+        memuat game sebelum mencoba kontrolnya.
       </p>
 
-      <div id="status" role="status" aria-live="polite">
+      <p id="status" role="status" aria-live="polite">
         Menunggu file ROM...
-      </div>
+      </p>
     </section>
 
-    <section id="game-frame" aria-label="Layar emulator">
+    <section id="game-frame" aria-label="Layar game">
       <div id="game"></div>
     </section>
 
     <section class="panel controls-info">
-      <strong>Kontrol keyboard</strong><br>
-      Arah: tombol panah<br>
-      Tombol game: Z dan X<br>
+      <strong>Kontrol</strong><br>
+      Arah: tombol panah keyboard<br>
+      Tombol game: Z / X<br>
       Start: Enter<br>
       Select: Shift
 
       <p class="hint">
-        Kontrol virtual EmulatorJS akan menggunakan pemetaan kontrol
-        di bawah. Pada desktop, tombol virtual mungkin bergantung
-        pada mode tampilan dan dukungan versi EmulatorJS.
+        Kontrol sentuh EmulatorJS dikonfigurasi untuk mode mobile.
+        Tampilan kontrol dapat berbeda menurut versi EmulatorJS dan
+        perangkat yang digunakan.
       </p>
     </section>
 
@@ -191,55 +174,50 @@
     const DATA_PATH =
       "https://cdn.emulatorjs.org/stable/data/";
 
-    let currentRomUrl = null;
     let emulatorStarted = false;
+    let currentRomUrl = null;
 
-    romInput.addEventListener("change", function () {
-      const file = romInput.files && romInput.files[0];
+    romInput.addEventListener("change", () => {
+      const file = romInput.files?.[0];
+      if (!file) return;
 
-      if (!file) {
-        return;
-      }
+      const filename = file.name.toLowerCase();
 
-      const name = file.name.toLowerCase();
-
-      if (!name.endsWith(".gb") && !name.endsWith(".gbc")) {
+      if (!filename.endsWith(".gb") &&
+          !filename.endsWith(".gbc")) {
         statusText.textContent =
-          "File tidak didukung. Pilih file .gb atau .gbc.";
+          "Format tidak didukung. Pilih file .gb atau .gbc.";
         romInput.value = "";
         return;
       }
 
       if (emulatorStarted) {
         statusText.textContent =
-          "Emulator sudah dimuat. Refresh halaman untuk memilih ROM lain.";
+          "Untuk mengganti ROM, refresh halaman terlebih dahulu.";
         return;
       }
 
       emulatorStarted = true;
-
-      if (currentRomUrl) {
-        URL.revokeObjectURL(currentRomUrl);
-      }
+      romInput.disabled = true;
 
       currentRomUrl = URL.createObjectURL(file);
 
       statusText.textContent =
         "Memuat " + file.name + "...";
 
-      // EmulatorJS core and ROM configuration
+      // EmulatorJS configuration
       window.EJS_player = "#game";
       window.EJS_core = "gb";
       window.EJS_gameUrl = currentRomUrl;
       window.EJS_gameName = file.name;
       window.EJS_pathtodata = DATA_PATH;
       window.EJS_startOnLoaded = true;
-      window.EJS_language = "id-ID";
-      window.EJS_backgroundColor = "#000000";
-      window.EJS_color = "#a8ff60";
+      window.EJS_language = "en-US";
 
-      // Native EmulatorJS virtual controller layout.
-      // No synthetic KeyboardEvent is used.
+      // Force EmulatorJS mobile interface.
+      window.EJS_browserMode = "mobile";
+
+      // Official virtual gamepad configuration.
       window.EJS_VirtualGamepadSettings = [
         {
           type: "dpad",
@@ -275,7 +253,6 @@
           id: "iwak-select",
           location: "center",
           left: -65,
-          top: 0,
           fontSize: 13,
           block: true,
           input_value: 2
@@ -286,7 +263,6 @@
           id: "iwak-start",
           location: "center",
           left: 15,
-          top: 0,
           fontSize: 13,
           block: true,
           input_value: 3
@@ -295,7 +271,7 @@
 
       window.EJS_ready = function () {
         statusText.textContent =
-          "Emulator siap. Coba keyboard dan kontrol virtual.";
+          "Emulator siap. Coba kontrol game!";
       };
 
       window.EJS_onGameStart = function () {
@@ -309,19 +285,21 @@
 
       loader.onload = function () {
         statusText.textContent =
-          "Loader dimuat. Menyiapkan emulator...";
+          "EmulatorJS dimuat. Menyiapkan game...";
       };
 
       loader.onerror = function () {
         statusText.textContent =
-          "Gagal memuat EmulatorJS. Periksa koneksi internet atau CDN.";
+          "Gagal memuat EmulatorJS. Periksa koneksi internet.";
+
         emulatorStarted = false;
+        romInput.disabled = false;
       };
 
       document.body.appendChild(loader);
     });
 
-    window.addEventListener("beforeunload", function () {
+    window.addEventListener("beforeunload", () => {
       if (currentRomUrl) {
         URL.revokeObjectURL(currentRomUrl);
       }
