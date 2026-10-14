@@ -17,7 +17,9 @@
       --muted: #a7b3a3;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -29,7 +31,7 @@
 
     .page {
       width: min(100%, 1000px);
-      margin: auto;
+      margin: 0 auto;
     }
 
     header {
@@ -43,7 +45,8 @@
       font-size: clamp(28px, 5vw, 42px);
     }
 
-    header p, .hint {
+    header p,
+    .hint {
       color: var(--muted);
     }
 
@@ -111,9 +114,18 @@
     }
 
     @media (max-width: 600px) {
-      body { padding: 10px; }
-      .panel { padding: 13px; }
-      #game-frame, #game { min-height: 320px; }
+      body {
+        padding: 10px;
+      }
+
+      .panel {
+        padding: 13px;
+      }
+
+      #game-frame,
+      #game {
+        min-height: 320px;
+      }
     }
   </style>
 </head>
@@ -126,7 +138,9 @@
     </header>
 
     <section class="panel">
-      <label for="rom-file">Pilih ROM Game Boy (.gb / .gbc)</label>
+      <label for="rom-file">
+        Pilih ROM Game Boy (.gb / .gbc)
+      </label>
 
       <input
         id="rom-file"
@@ -135,8 +149,8 @@
       >
 
       <p class="hint">
-        Pilih file ROM yang kamu miliki. Tunggu sampai emulator selesai
-        memuat game sebelum mencoba kontrolnya.
+        Pilih ROM yang kamu miliki. Emulator akan dimuat
+        setelah file dipilih.
       </p>
 
       <p id="status" role="status" aria-live="polite">
@@ -149,16 +163,15 @@
     </section>
 
     <section class="panel controls-info">
-      <strong>Kontrol</strong><br>
-      Arah: tombol panah keyboard<br>
-      Tombol game: Z / X<br>
+      <strong>Kontrol keyboard</strong><br>
+      Arah: tombol panah<br>
+      A / B: Z / X<br>
       Start: Enter<br>
       Select: Shift
 
       <p class="hint">
-        Kontrol sentuh EmulatorJS dikonfigurasi untuk mode mobile.
-        Tampilan kontrol dapat berbeda menurut versi EmulatorJS dan
-        perangkat yang digunakan.
+        Untuk kontrol sentuh, buka menu kontrol EmulatorJS
+        dan aktifkan Virtual Gamepad jika opsinya tersedia.
       </p>
     </section>
 
@@ -177,8 +190,9 @@
     let emulatorStarted = false;
     let currentRomUrl = null;
 
-    romInput.addEventListener("change", () => {
-      const file = romInput.files?.[0];
+    romInput.addEventListener("change", function () {
+      const file = romInput.files && romInput.files[0];
+
       if (!file) return;
 
       const filename = file.name.toLowerCase();
@@ -193,7 +207,7 @@
 
       if (emulatorStarted) {
         statusText.textContent =
-          "Untuk mengganti ROM, refresh halaman terlebih dahulu.";
+          "Refresh halaman untuk mengganti ROM.";
         return;
       }
 
@@ -214,64 +228,22 @@
       window.EJS_startOnLoaded = true;
       window.EJS_language = "en-US";
 
-      // Force EmulatorJS mobile interface.
-      window.EJS_browserMode = "mobile";
+      // Use the Game Boy control scheme.
+      window.EJS_controlScheme = "gb";
 
-      // Official virtual gamepad configuration.
-      window.EJS_VirtualGamepadSettings = [
-        {
-          type: "dpad",
-          location: "left",
-          left: "50%",
-          right: "50%",
-          joystickInput: false,
-          inputValues: [4, 5, 6, 7]
-        },
-        {
-          type: "button",
-          text: "B",
-          id: "iwak-b",
-          location: "right",
-          left: 0,
-          top: 40,
-          bold: true,
-          input_value: 8
-        },
-        {
-          type: "button",
-          text: "A",
-          id: "iwak-a",
-          location: "right",
-          left: 48,
-          top: 0,
-          bold: true,
-          input_value: 0
-        },
-        {
-          type: "button",
-          text: "Select",
-          id: "iwak-select",
-          location: "center",
-          left: -65,
-          fontSize: 13,
-          block: true,
-          input_value: 2
-        },
-        {
-          type: "button",
-          text: "Start",
-          id: "iwak-start",
-          location: "center",
-          left: 15,
-          fontSize: 13,
-          block: true,
-          input_value: 3
-        }
-      ];
+      // Show the emulator toolbar's gamepad option.
+      window.EJS_Buttons = {
+        playPause: true,
+        restart: true,
+        settings: true,
+        fullscreen: true,
+        gamepad: true,
+        volume: true
+      };
 
       window.EJS_ready = function () {
         statusText.textContent =
-          "Emulator siap. Coba kontrol game!";
+          "Emulator siap. Periksa menu Virtual Gamepad.";
       };
 
       window.EJS_onGameStart = function () {
@@ -282,11 +254,6 @@
       const loader = document.createElement("script");
       loader.src = DATA_PATH + "loader.js";
       loader.async = true;
-
-      loader.onload = function () {
-        statusText.textContent =
-          "EmulatorJS dimuat. Menyiapkan game...";
-      };
 
       loader.onerror = function () {
         statusText.textContent =
@@ -299,7 +266,7 @@
       document.body.appendChild(loader);
     });
 
-    window.addEventListener("beforeunload", () => {
+    window.addEventListener("beforeunload", function () {
       if (currentRomUrl) {
         URL.revokeObjectURL(currentRomUrl);
       }
