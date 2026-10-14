@@ -3,464 +3,329 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17251d">
-  <title>Iwakwabsurd Retro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>IwakWabsurd Retro</title>
 
   <style>
     :root {
       color-scheme: dark;
       --bg: #101510;
-      --panel: #202a21;
-      --border: #40503e;
-      --accent: #b5f28c;
-      --text: #f0f4e8;
-      --muted: #c7d5bd;
+      --panel: #1b241c;
+      --green: #a8ff60;
+      --text: #f1f5ed;
+      --muted: #a7b3a3;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
-      padding: 18px;
+      padding: 20px;
+      min-height: 100vh;
       background: var(--bg);
       color: var(--text);
-      font: 16px system-ui, sans-serif;
+      font-family: system-ui, Arial, sans-serif;
+    }
+
+    .page {
+      width: min(100%, 1000px);
+      margin: 0 auto;
+    }
+
+    header {
       text-align: center;
+      margin-bottom: 22px;
     }
 
-    main {
-      width: 100%;
-      max-width: 900px;
-      margin: auto;
+    h1 {
+      margin: 0 0 8px;
+      color: var(--green);
+      font-size: clamp(26px, 5vw, 42px);
     }
 
-    h1 { color: var(--accent); }
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
 
     .panel {
-      margin: 18px 0;
       padding: 18px;
+      margin-bottom: 18px;
+      border: 1px solid #354334;
+      border-radius: 14px;
       background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
     }
 
-    input, button {
-      font: inherit;
-      border-radius: 10px;
+    .file-label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 700;
     }
 
-    input {
+    input[type="file"] {
       width: 100%;
-      padding: 14px;
-      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #4b5d48;
+      border-radius: 9px;
+      background: #111811;
       color: var(--text);
-      background: #141c15;
-      border: 1px solid var(--border);
     }
 
-    button {
-      border: 0;
-      cursor: pointer;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
     }
 
-    button:disabled {
-      opacity: .6;
-      cursor: wait;
+    #status {
+      margin-top: 12px;
+      color: var(--green);
+      overflow-wrap: anywhere;
     }
 
-    .main-button {
+    #game-frame {
+      overflow: hidden;
       width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      color: #17251d;
-      background: var(--accent);
-      font-weight: bold;
+      min-height: 360px;
+      border: 1px solid #354334;
+      border-radius: 14px;
+      background: #000;
     }
 
     #game {
       width: 100%;
-      min-height: 250px;
-      position: relative;
-      overflow: hidden;
+      min-height: 360px;
       background: #000;
-      border-radius: 8px;
     }
 
-    #game canvas {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      margin: auto;
+    .controls-info {
+      line-height: 1.8;
     }
 
-    #status {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
+    .controls-info strong {
+      color: var(--green);
     }
 
-    .note {
+    footer {
+      padding: 12px;
+      text-align: center;
       color: var(--muted);
-      font-size: 14px;
-    }
-
-    [hidden] { display: none !important; }
-
-    /* Virtual controller */
-    #controller {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      align-items: center;
-      margin-top: 20px;
-      padding: 14px 0;
-    }
-
-    .dpad {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(42px, 62px));
-      grid-template-rows: repeat(3, 52px);
-      gap: 5px;
-      justify-content: center;
-    }
-
-    .ctrl {
-      min-width: 0;
-      color: #f0f4e8;
-      background: #354334;
-      border: 1px solid #60765a;
-      box-shadow: 0 4px 0 #101510;
-      font-weight: bold;
-      font-size: 18px;
-    }
-
-    .ctrl:active, .ctrl.pressed {
-      background: #71985f;
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #101510;
-    }
-
-    .up { grid-column: 2; grid-row: 1; }
-    .left { grid-column: 1; grid-row: 2; }
-    .right { grid-column: 3; grid-row: 2; }
-    .down { grid-column: 2; grid-row: 3; }
-
-    .action-area {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .action {
-      width: clamp(48px, 14vw, 68px);
-      height: clamp(48px, 14vw, 68px);
-      border-radius: 50%;
-      background: #b94b60;
-      border: 2px solid #e98b99;
-      font-size: 21px;
-    }
-
-    .action:nth-child(2) {
-      background: #4775ae;
-      border-color: #8eb8ed;
-    }
-
-    .utility-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .utility {
-      padding: 9px 18px;
-      border-radius: 20px;
-      background: #596154;
-      color: white;
       font-size: 12px;
-      font-weight: bold;
     }
 
-    @media (max-width: 480px) {
-      body { padding: 10px; }
-      .panel { padding: 12px; }
-      #controller { gap: 8px; }
-      .dpad {
-        grid-template-columns: repeat(3, minmax(34px, 52px));
-        grid-template-rows: repeat(3, 45px);
-        gap: 4px;
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
       }
-      .ctrl { font-size: 16px; }
+
+      .panel {
+        padding: 13px;
+      }
+
+      #game-frame,
+      #game {
+        min-height: 300px;
+      }
     }
   </style>
 </head>
 
 <body>
-<main>
-  <h1>IWAKWABSURD RETRO</h1>
-  <p>Game Boy Browser Emulator</p>
+  <main class="page">
+    <header>
+      <h1>IwakWabsurd Retro</h1>
+      <p>Game Boy emulator • Play your own ROM</p>
+    </header>
 
-  <section class="panel" id="menu">
-    <h2>Pilih game</h2>
+    <section class="panel">
+      <label class="file-label" for="rom-file">
+        Pilih game Game Boy (.gb / .gbc)
+      </label>
 
-    <input id="rom" type="file" accept=".gb,.gbc">
+      <input
+        id="rom-file"
+        type="file"
+        accept=".gb,.gbc,application/octet-stream"
+      >
 
-    <button class="main-button" id="start" type="button">
-      🎮 Jalankan game
-    </button>
+      <p class="hint">
+        Pilih file ROM milikmu. Game akan dimuat di bawah.
+        Jangan tutup halaman saat game sedang berjalan.
+      </p>
 
-    <p id="status" role="status" aria-live="polite">
-      Pilih ROM .gb atau .gbc yang boleh kamu gunakan.
-    </p>
-  </section>
-
-  <section class="panel" id="player" hidden>
-    <h2 id="title">Game</h2>
-
-    <div id="game"></div>
-
-    <div id="controller">
-      <div class="dpad">
-        <button class="ctrl up" data-key="ArrowUp" aria-label="Atas">▲</button>
-        <button class="ctrl left" data-key="ArrowLeft" aria-label="Kiri">◀</button>
-        <button class="ctrl right" data-key="ArrowRight" aria-label="Kanan">▶</button>
-        <button class="ctrl down" data-key="ArrowDown" aria-label="Bawah">▼</button>
+      <div id="status" role="status" aria-live="polite">
+        Menunggu file ROM...
       </div>
+    </section>
 
-      <div class="action-area">
-        <button class="ctrl action" data-key="x" aria-label="Tombol B">B</button>
-        <button class="ctrl action" data-key="z" aria-label="Tombol A">A</button>
-      </div>
-    </div>
+    <section id="game-frame" aria-label="Layar emulator">
+      <div id="game"></div>
+    </section>
 
-    <div class="utility-buttons">
-      <button class="ctrl utility" data-key="Shift" aria-label="Select">SELECT</button>
-      <button class="ctrl utility" data-key="Enter" aria-label="Start">START</button>
-    </div>
+    <section class="panel controls-info">
+      <strong>Kontrol keyboard</strong><br>
+      Arah: tombol panah<br>
+      Tombol game: Z dan X<br>
+      Start: Enter<br>
+      Select: Shift
 
-    <p class="note">
-      Sentuh dan tahan tombol untuk bergerak. Keyboard juga bisa digunakan.
-    </p>
+      <p class="hint">
+        Kontrol virtual EmulatorJS akan menggunakan pemetaan kontrol
+        di bawah. Pada desktop, tombol virtual mungkin bergantung
+        pada mode tampilan dan dukungan versi EmulatorJS.
+      </p>
+    </section>
 
-    <button class="main-button" id="back" type="button">
-      ↩ Kembali ke menu
-    </button>
-  </section>
+    <footer>
+      IwakWabsurd Retro • Powered by EmulatorJS
+    </footer>
+  </main>
 
-  <p class="note">
-    Proyek independen, tidak berafiliasi dengan Nintendo.
-  </p>
-</main>
+  <script>
+    const romInput = document.getElementById("rom-file");
+    const statusText = document.getElementById("status");
 
-<script>
-(() => {
-  const input = document.getElementById("rom");
-  const status = document.getElementById("status");
-  const startButton = document.getElementById("start");
-  const menu = document.getElementById("menu");
-  const player = document.getElementById("player");
-  const gameArea = document.getElementById("game");
-  const title = document.getElementById("title");
+    const DATA_PATH =
+      "https://cdn.emulatorjs.org/stable/data/";
 
-  const DATA_PATH =
-    "https://cdn.emulatorjs.org/stable/data/";
+    let currentRomUrl = null;
+    let emulatorStarted = false;
 
-  let loading = false;
-  let romUrl = null;
-  let loaderScript = null;
+    romInput.addEventListener("change", function () {
+      const file = romInput.files && romInput.files[0];
 
-  function showStatus(message) {
-    status.textContent = message;
-  }
+      if (!file) {
+        return;
+      }
 
-  function releaseRom() {
-    if (romUrl) {
-      URL.revokeObjectURL(romUrl);
-      romUrl = null;
-    }
-  }
+      const name = file.name.toLowerCase();
 
-  function resetPage() {
-    releaseRom();
-    location.reload();
-  }
+      if (!name.endsWith(".gb") && !name.endsWith(".gbc")) {
+        statusText.textContent =
+          "File tidak didukung. Pilih file .gb atau .gbc.";
+        romInput.value = "";
+        return;
+      }
 
-  document.getElementById("back").addEventListener("click", resetPage);
+      if (emulatorStarted) {
+        statusText.textContent =
+          "Emulator sudah dimuat. Refresh halaman untuk memilih ROM lain.";
+        return;
+      }
 
-  startButton.addEventListener("click", () => {
-    if (loading) return;
+      emulatorStarted = true;
 
-    const file = input.files && input.files[0];
+      if (currentRomUrl) {
+        URL.revokeObjectURL(currentRomUrl);
+      }
 
-    if (!file) {
-      showStatus("Pilih file .gb atau .gbc dahulu.");
-      return;
-    }
+      currentRomUrl = URL.createObjectURL(file);
 
-    if (!/\.(gb|gbc)$/i.test(file.name)) {
-      showStatus("Format file tidak didukung.");
-      return;
-    }
+      statusText.textContent =
+        "Memuat " + file.name + "...";
 
-    if (!file.size) {
-      showStatus("File ROM kosong.");
-      return;
-    }
+      // EmulatorJS core and ROM configuration
+      window.EJS_player = "#game";
+      window.EJS_core = "gb";
+      window.EJS_gameUrl = currentRomUrl;
+      window.EJS_gameName = file.name;
+      window.EJS_pathtodata = DATA_PATH;
+      window.EJS_startOnLoaded = true;
+      window.EJS_language = "id-ID";
+      window.EJS_backgroundColor = "#000000";
+      window.EJS_color = "#a8ff60";
 
-    loading = true;
-    startButton.disabled = true;
-    showStatus("Menyiapkan emulator...");
+      // Native EmulatorJS virtual controller layout.
+      // No synthetic KeyboardEvent is used.
+      window.EJS_VirtualGamepadSettings = [
+        {
+          type: "dpad",
+          location: "left",
+          left: "50%",
+          right: "50%",
+          joystickInput: false,
+          inputValues: [4, 5, 6, 7]
+        },
+        {
+          type: "button",
+          text: "B",
+          id: "iwak-b",
+          location: "right",
+          left: 0,
+          top: 40,
+          bold: true,
+          input_value: 8
+        },
+        {
+          type: "button",
+          text: "A",
+          id: "iwak-a",
+          location: "right",
+          left: 48,
+          top: 0,
+          bold: true,
+          input_value: 0
+        },
+        {
+          type: "button",
+          text: "Select",
+          id: "iwak-select",
+          location: "center",
+          left: -65,
+          top: 0,
+          fontSize: 13,
+          block: true,
+          input_value: 2
+        },
+        {
+          type: "button",
+          text: "Start",
+          id: "iwak-start",
+          location: "center",
+          left: 15,
+          top: 0,
+          fontSize: 13,
+          block: true,
+          input_value: 3
+        }
+      ];
 
-    romUrl = URL.createObjectURL(file);
+      window.EJS_ready = function () {
+        statusText.textContent =
+          "Emulator siap. Coba keyboard dan kontrol virtual.";
+      };
 
-    title.textContent = file.name;
-    menu.hidden = true;
-    player.hidden = false;
-    gameArea.replaceChildren();
+      window.EJS_onGameStart = function () {
+        statusText.textContent =
+          "Game berjalan: " + file.name;
+      };
 
-    /*
-      Konfigurasi wajib ditetapkan sebelum loader.js dimuat.
-    */
-    window.EJS_player = "#game";
-    window.EJS_core = "gb";
-    window.EJS_gameUrl = romUrl;
-    window.EJS_gameName = file.name;
-    window.EJS_pathtodata = DATA_PATH;
-    window.EJS_startOnLoaded = true;
+      const loader = document.createElement("script");
+      loader.src = DATA_PATH + "loader.js";
+      loader.async = true;
 
-    /*
-      Kontrol halaman memakai tombol keyboard virtual.
-      Mapping default EmulatorJS umumnya:
-      Arrow keys = arah, X = B, Z = A,
-      Shift = Select, Enter = Start.
-    */
+      loader.onload = function () {
+        statusText.textContent =
+          "Loader dimuat. Menyiapkan emulator...";
+      };
 
-    loaderScript = document.createElement("script");
-    loaderScript.src = DATA_PATH + "loader.js";
-    loaderScript.async = true;
+      loader.onerror = function () {
+        statusText.textContent =
+          "Gagal memuat EmulatorJS. Periksa koneksi internet atau CDN.";
+        emulatorStarted = false;
+      };
 
-    loaderScript.onload = () => {
-      showStatus(
-        "Loader dimuat. Emulator sedang menyiapkan game..."
-      );
-    };
-
-    loaderScript.onerror = () => {
-      showStatus(
-        "Gagal memuat EmulatorJS. Periksa koneksi internet atau CDN."
-      );
-      loading = false;
-      startButton.disabled = false;
-    };
-
-    document.body.appendChild(loaderScript);
-  });
-
-  /*
-    Virtual buttons dispatch keyboard events to the page.
-    These events are a best-effort fallback: some emulator
-    builds listen only to physical keyboard events.
-  */
-  const heldKeys = new Set();
-
-  function pressKey(button) {
-    const key = button.dataset.key;
-    if (!key || heldKeys.has(key)) return;
-
-    heldKeys.add(key);
-    button.classList.add("pressed");
-
-    window.dispatchEvent(new KeyboardEvent("keydown", {
-      key: key,
-      code: key.startsWith("Arrow")
-        ? key
-        : key === "Shift"
-          ? "ShiftLeft"
-          : key === "Enter"
-            ? "Enter"
-            : "Key" + key.toUpperCase(),
-      bubbles: true,
-      cancelable: true
-    }));
-  }
-
-  function releaseKey(button) {
-    const key = button.dataset.key;
-    if (!key) return;
-
-    heldKeys.delete(key);
-    button.classList.remove("pressed");
-
-    window.dispatchEvent(new KeyboardEvent("keyup", {
-      key: key,
-      code: key.startsWith("Arrow")
-        ? key
-        : key === "Shift"
-          ? "ShiftLeft"
-          : key === "Enter"
-            ? "Enter"
-            : "Key" + key.toUpperCase(),
-      bubbles: true,
-      cancelable: true
-    }));
-  }
-
-  document.querySelectorAll("[data-key]").forEach(button => {
-    button.addEventListener("pointerdown", event => {
-      event.preventDefault();
-      try {
-        button.setPointerCapture(event.pointerId);
-      } catch (_) {}
-      pressKey(button);
+      document.body.appendChild(loader);
     });
 
-    button.addEventListener("pointerup", event => {
-      event.preventDefault();
-      releaseKey(button);
+    window.addEventListener("beforeunload", function () {
+      if (currentRomUrl) {
+        URL.revokeObjectURL(currentRomUrl);
+      }
     });
-
-    button.addEventListener("pointercancel", () => {
-      releaseKey(button);
-    });
-
-    button.addEventListener("lostpointercapture", () => {
-      releaseKey(button);
-    });
-
-    button.addEventListener("contextmenu", event => {
-      event.preventDefault();
-    });
-  });
-
-  window.addEventListener("blur", () => {
-    document.querySelectorAll("[data-key]").forEach(releaseKey);
-  });
-
-  window.addEventListener("error", event => {
-    if (player.hidden) return;
-
-    showStatus(
-      "JavaScript error: " +
-      (event.message || "Kesalahan tidak diketahui")
-    );
-  });
-
-  window.addEventListener("unhandledrejection", event => {
-    if (player.hidden) return;
-
-    const reason = event.reason;
-    const message = reason && reason.message
-      ? reason.message
-      : String(reason || "Kesalahan tidak diketahui");
-
-    showStatus("Emulator error: " + message);
-  });
-})();
-</script>
+  </script>
 </body>
 </html>
