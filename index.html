@@ -1,125 +1,298 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#17251d">
   <title>Iwakwabsurd Retro</title>
+
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101510;
+      --panel: #202a21;
+      --border: #40503e;
+      --accent: #b5f28c;
+      --text: #f0f4e8;
+      --muted: #c7d5bd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 20px;
-      background: #101510;
-      color: #f0f4e8;
+      background: var(--bg);
+      color: var(--text);
       font: 16px system-ui, sans-serif;
       text-align: center;
     }
-    main { max-width: 700px; margin: auto; }
-    h1 { color: #b5f28c; }
-    .panel {
-      background: #202a21;
-      border: 1px solid #40503e;
-      border-radius: 16px;
-      padding: 18px;
-      margin: 18px 0;
+
+    main {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
     }
-    input, button {
+
+    h1 {
+      color: var(--accent);
+      overflow-wrap: anywhere;
+    }
+
+    .panel {
+      margin: 18px 0;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    input,
+    button {
       display: block;
       width: 100%;
-      box-sizing: border-box;
       margin: 12px 0;
       padding: 14px;
       border-radius: 10px;
       font: inherit;
     }
+
+    input {
+      background: #141c15;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
     button {
       border: 0;
-      background: #b5f28c;
+      background: var(--accent);
       color: #17251d;
       font-weight: bold;
+      cursor: pointer;
     }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
     #game {
       width: 100%;
-      min-height: 300px;
+      min-height: 320px;
+      position: relative;
       overflow: hidden;
+      background: #000;
+      border-radius: 8px;
     }
-    #status { overflow-wrap: anywhere; }
-    .note { color: #c7d5bd; font-size: 14px; }
+
+    #game canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+    }
+
+    #status {
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
   </style>
 </head>
+
 <body>
-<main>
-  <h1>IWAKWABSURD RETRO</h1>
-  <p>Game Boy Browser Emulator</p>
+  <main>
+    <h1>IWAKWABSURD RETRO</h1>
+    <p>Game Boy Browser Emulator</p>
 
-  <section class="panel" id="menu">
-    <h2>Pilih game</h2>
-    <input id="rom" type="file"
-           accept=".gb,.gbc">
-    <button id="start">Jalankan game</button>
-    <p id="status" role="status">
-      Pilih ROM Game Boy yang legal untuk digunakan.
-    </p>
-  </section>
+    <section class="panel" id="menu">
+      <h2>Pilih game</h2>
 
-  <section class="panel" id="player" hidden>
-    <h2 id="title">Game</h2>
-    <div id="game"></div>
+      <input
+        id="rom"
+        type="file"
+        accept=".gb,.gbc"
+      >
+
+      <button id="start" type="button">
+        Jalankan game
+      </button>
+
+      <p id="status" role="status" aria-live="polite">
+        Pilih ROM Game Boy buatan sendiri atau ROM yang boleh kamu gunakan.
+      </p>
+    </section>
+
+    <section class="panel" id="player" hidden>
+      <h2 id="title">Game</h2>
+
+      <div id="game"></div>
+
+      <button id="back" type="button">
+        Kembali ke menu
+      </button>
+
+      <p class="note">
+        Untuk berganti game, kembali ke menu dan pilih ROM lain.
+      </p>
+    </section>
+
     <p class="note">
-      Untuk berganti game, muat ulang halaman lalu pilih ROM lain.
+      Proyek independen, tidak berafiliasi dengan Nintendo.
     </p>
-  </section>
+  </main>
 
-  <p class="note">
-    Proyek independen. Tidak berafiliasi dengan Nintendo.
-  </p>
-</main>
+  <script>
+    (() => {
+      const input = document.getElementById("rom");
+      const status = document.getElementById("status");
+      const startButton = document.getElementById("start");
+      const backButton = document.getElementById("back");
+      const menu = document.getElementById("menu");
+      const player = document.getElementById("player");
+      const gameArea = document.getElementById("game");
+      const title = document.getElementById("title");
 
-<script>
-const input = document.getElementById("rom");
-const status = document.getElementById("status");
+      const DATA_PATH =
+        "https://cdn.emulatorjs.org/stable/data/";
 
-document.getElementById("start").onclick = () => {
-  const file = input.files[0];
+      let loading = false;
+      let romUrl = null;
+      let loaderScript = null;
 
-  if (!file) {
-    status.textContent = "Pilih file .gb atau .gbc dahulu.";
-    return;
-  }
+      function showStatus(message) {
+        status.textContent = message;
+      }
 
-  if (!/\.(gb|gbc)$/i.test(file.name)) {
-    status.textContent = "Format file tidak didukung.";
-    return;
-  }
+      function releaseRomUrl() {
+        if (romUrl) {
+          URL.revokeObjectURL(romUrl);
+          romUrl = null;
+        }
+      }
 
-  document.getElementById("menu").hidden = true;
-  document.getElementById("player").hidden = false;
-  document.getElementById("title").textContent = file.name;
+      function returnToMenu() {
+        /*
+         * Reloading is the safest way to stop the current
+         * emulator instance and reset its global configuration.
+         */
+        location.reload();
+      }
 
-  // EmulatorJS membaca ROM yang dipilih pengguna.
-  window.EJS_player = "#game";
-  window.EJS_core = "gb";
-  window.EJS_gameUrl = URL.createObjectURL(file);
-  window.EJS_gameName = file.name;
-  window.EJS_pathtodata =
-    "https://cdn.emulatorjs.org/stable/data/";
+      backButton.addEventListener("click", returnToMenu);
 
-  status.textContent = "Memuat emulator...";
+      startButton.addEventListener("click", () => {
+        if (loading) return;
 
-  const script = document.createElement("script");
-  script.src =
-    "https://cdn.emulatorjs.org/stable/data/loader.js";
-  script.onload = () => {
-    status.textContent = "Loader berhasil dimuat.";
-  };
-  script.onerror = () => {
-    status.textContent =
-      "Gagal memuat emulator. Periksa koneksi internet.";
-  };
-  document.body.appendChild(script);
-};
-</script>
+        const file = input.files && input.files[0];
+
+        if (!file) {
+          showStatus("Pilih file .gb atau .gbc dahulu.");
+          return;
+        }
+
+        if (!/\.(gb|gbc)$/i.test(file.name)) {
+          showStatus("Format tidak didukung. Pilih file .gb atau .gbc.");
+          return;
+        }
+
+        if (file.size === 0) {
+          showStatus("File ROM kosong. Pilih file lain.");
+          return;
+        }
+
+        loading = true;
+        startButton.disabled = true;
+
+        showStatus("Menyiapkan emulator...");
+
+        romUrl = URL.createObjectURL(file);
+
+        title.textContent = file.name;
+        menu.hidden = true;
+        player.hidden = false;
+
+        gameArea.replaceChildren();
+
+        /*
+         * EmulatorJS configuration must exist BEFORE loader.js
+         * is added to the document.
+         */
+        window.EJS_player = "#game";
+        window.EJS_core = "gb";
+        window.EJS_gameUrl = romUrl;
+        window.EJS_gameName = file.name;
+        window.EJS_pathtodata = DATA_PATH;
+        window.EJS_startOnLoaded = true;
+
+        /*
+         * Show emulator initialization errors in the page
+         * when EmulatorJS exposes its error callback.
+         */
+        window.EJS_onGameStart = () => {
+          showStatus("Game mulai dijalankan!");
+        };
+
+        window.EJS_onLoadState = () => {
+          showStatus("Emulator sedang memuat game...");
+        };
+
+        loaderScript = document.createElement("script");
+        loaderScript.src = DATA_PATH + "loader.js";
+        loaderScript.async = true;
+
+        loaderScript.onload = () => {
+          showStatus(
+            "Loader berhasil dimuat. Menunggu emulator menjalankan game..."
+          );
+        };
+
+        loaderScript.onerror = () => {
+          showStatus(
+            "Gagal memuat EmulatorJS.\n" +
+            "Periksa koneksi internet, CDN, atau pemblokir script."
+          );
+
+          loading = false;
+          startButton.disabled = false;
+        };
+
+        document.body.appendChild(loaderScript);
+      });
+
+      window.addEventListener("error", (event) => {
+        if (player.hidden) return;
+
+        showStatus(
+          "JavaScript error: " +
+          (event.message || "Kesalahan tidak diketahui")
+        );
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        if (player.hidden) return;
+
+        const reason = event.reason;
+        const message =
+          reason && reason.message
+            ? reason.message
+            : String(reason || "Kesalahan tidak diketahui");
+
+        showStatus("Emulator error: " + message);
+      });
+    })();
+  </script>
 </body>
 </html>
