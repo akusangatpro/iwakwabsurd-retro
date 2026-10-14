@@ -1,0 +1,125 @@
+
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17251d">
+  <title>Iwakwabsurd Retro</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #101510;
+      color: #f0f4e8;
+      font: 16px system-ui, sans-serif;
+      text-align: center;
+    }
+    main { max-width: 700px; margin: auto; }
+    h1 { color: #b5f28c; }
+    .panel {
+      background: #202a21;
+      border: 1px solid #40503e;
+      border-radius: 16px;
+      padding: 18px;
+      margin: 18px 0;
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 12px 0;
+      padding: 14px;
+      border-radius: 10px;
+      font: inherit;
+    }
+    button {
+      border: 0;
+      background: #b5f28c;
+      color: #17251d;
+      font-weight: bold;
+    }
+    #game {
+      width: 100%;
+      min-height: 300px;
+      overflow: hidden;
+    }
+    #status { overflow-wrap: anywhere; }
+    .note { color: #c7d5bd; font-size: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>IWAKWABSURD RETRO</h1>
+  <p>Game Boy Browser Emulator</p>
+
+  <section class="panel" id="menu">
+    <h2>Pilih game</h2>
+    <input id="rom" type="file"
+           accept=".gb,.gbc">
+    <button id="start">Jalankan game</button>
+    <p id="status" role="status">
+      Pilih ROM Game Boy yang legal untuk digunakan.
+    </p>
+  </section>
+
+  <section class="panel" id="player" hidden>
+    <h2 id="title">Game</h2>
+    <div id="game"></div>
+    <p class="note">
+      Untuk berganti game, muat ulang halaman lalu pilih ROM lain.
+    </p>
+  </section>
+
+  <p class="note">
+    Proyek independen. Tidak berafiliasi dengan Nintendo.
+  </p>
+</main>
+
+<script>
+const input = document.getElementById("rom");
+const status = document.getElementById("status");
+
+document.getElementById("start").onclick = () => {
+  const file = input.files[0];
+
+  if (!file) {
+    status.textContent = "Pilih file .gb atau .gbc dahulu.";
+    return;
+  }
+
+  if (!/\.(gb|gbc)$/i.test(file.name)) {
+    status.textContent = "Format file tidak didukung.";
+    return;
+  }
+
+  document.getElementById("menu").hidden = true;
+  document.getElementById("player").hidden = false;
+  document.getElementById("title").textContent = file.name;
+
+  // EmulatorJS membaca ROM yang dipilih pengguna.
+  window.EJS_player = "#game";
+  window.EJS_core = "gb";
+  window.EJS_gameUrl = URL.createObjectURL(file);
+  window.EJS_gameName = file.name;
+  window.EJS_pathtodata =
+    "https://cdn.emulatorjs.org/stable/data/";
+
+  status.textContent = "Memuat emulator...";
+
+  const script = document.createElement("script");
+  script.src =
+    "https://cdn.emulatorjs.org/stable/data/loader.js";
+  script.onload = () => {
+    status.textContent = "Loader berhasil dimuat.";
+  };
+  script.onerror = () => {
+    status.textContent =
+      "Gagal memuat emulator. Periksa koneksi internet.";
+  };
+  document.body.appendChild(script);
+};
+</script>
+</body>
+</html>
